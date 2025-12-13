@@ -1,0 +1,18 @@
+candleGrabber:
+  minuteIntervalType: 1
+  hourIntervalType: 60
+  dayIntervalType: D
+  minuteIntervalQuantity: 120
+  hourIntervalQuantity: 120
+  dayIntervalQuantity: 60
+
+resilience4j:
+  ratelimiter:
+    instances:
+      bybitLimiter:
+        limitForPeriod: 100          # Bybit = 100 req/sec
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0s          # fail if cannot acquire permit immediately
+
+server:
+  port: 8085
