@@ -1,4 +1,0 @@
-exchange:
-  restProvider:
-    public-api-name: public-bybit-exchange
-    url: https://api.bybit.com

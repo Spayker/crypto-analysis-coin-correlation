@@ -1,8 +1,8 @@
 # crypto-trade-coin-correlation
 
-[![Build Status](https://github.com/Spayker/crypto-trade-coin-correlation/actions/workflows/ci.yml/badge.svg)](https://github.com/Spayker/crypto-trade-coin-correlation/actions/workflows/ci.yml)
-
+[![Build Status](https://github.com/Spayker/crypto-trade-coin-correlation/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Spayker/crypto-trade-coin-correlation/actions/workflows/ci.yml) &nbsp;
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Spayker/crypto-trade-coin-correlation/blob/main/LICENSE)
+
 
 
 Crypto trade coin correlation service provides price change percentage between target coin and other, available on spot market of ByBit.
