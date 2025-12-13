@@ -1,6 +1,0 @@
-com\spayker\crypto\analysis\service\CorrelationManagerTest.class
-com\spayker\crypto\analysis\controller\CorrelationControllerTest$1.class
-com\spayker\crypto\analysis\service\validator\BusinessRuleValidatorTest.class
-com\spayker\crypto\analysis\service\data\ByBitExchangeAdapterTest.class
-com\spayker\crypto\analysis\service\data\CandleHistoryManagerTest.class
-com\spayker\crypto\analysis\controller\CorrelationControllerTest.class
