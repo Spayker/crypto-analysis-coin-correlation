@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,10 +59,20 @@ public class CandleHistoryManager {
         candleStickHistory.remove(pairName);
         List<Kline> kLines = byBitExchangeAdapter.getHourKlines(pairName,
                 candleGrabberConfig.getHourIntervalType(), correlationRequestDto);
-        candleStickHistory.put(pairName,
-                TradeHistory.builder()
-                        .klines(kLines)
-                        .build()
-        );
+        if (isTradeHistoryValid(correlationRequestDto, kLines)) {
+            candleStickHistory.put(pairName, TradeHistory.builder()
+                            .klines(kLines)
+                            .build()
+            );
+        }
+    }
+
+    private boolean isTradeHistoryValid(CorrelationRequest correlationRequestDto, List<Kline> kLines) {
+        if (kLines.isEmpty()) {
+            return false;
+        }
+        Instant requestedStartDateTime = correlationRequestDto.getStartDateTime();
+        Instant firstKlineStartTime = Instant.ofEpochMilli(kLines.getFirst().getStartTime());
+        return Duration.between(requestedStartDateTime, firstKlineStartTime).toSeconds() == 3600;
     }
 }
