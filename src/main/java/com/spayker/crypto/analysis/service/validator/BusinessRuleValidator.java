@@ -7,6 +7,8 @@ import java.util.List;
 
 public class BusinessRuleValidator {
 
+    private BusinessRuleValidator() {}
+
     public static void validateRequest(String targetCoin, CorrelationRequest request) {
         if (targetCoin == null || targetCoin.isBlank()) {
             throw new InvalidTargetCoinException("Target coin is required");
@@ -21,7 +23,7 @@ public class BusinessRuleValidator {
         }
     }
 
-    public static void validateResolvedPairs(String targetCoin, CorrelationRequest request, List<String> resolvedPairs) {
+    public static void validateResolvedPairs(CorrelationRequest request, List<String> resolvedPairs) {
         if (resolvedPairs.isEmpty()) {
             throw new EmptyPairListException(request.getStableCoin());
         }

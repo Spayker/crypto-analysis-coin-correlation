@@ -79,7 +79,7 @@ class BusinessRuleValidatorTest {
 
         List<String> pairs = List.of("BTCUSDT");
         assertDoesNotThrow(() ->
-                BusinessRuleValidator.validateResolvedPairs("BTC", request, pairs));
+                BusinessRuleValidator.validateResolvedPairs(request, pairs));
     }
 
     @Test
@@ -92,7 +92,7 @@ class BusinessRuleValidatorTest {
         );
 
         assertThrows(EmptyPairListException.class, () ->
-                BusinessRuleValidator.validateResolvedPairs("BTC", request, Collections.emptyList()));
+                BusinessRuleValidator.validateResolvedPairs(request, Collections.emptyList()));
     }
 
     @Test
@@ -106,7 +106,7 @@ class BusinessRuleValidatorTest {
 
         List<String> pairs = List.of("BTCETH");
         assertThrows(InvalidPairException.class, () ->
-                BusinessRuleValidator.validateResolvedPairs("BTC", request, pairs));
+                BusinessRuleValidator.validateResolvedPairs(request, pairs));
     }
 
     @Test
@@ -119,7 +119,6 @@ class BusinessRuleValidatorTest {
         );
 
         List<String> pairs = Arrays.asList("XRPBTC", "LTCETH");
-        assertThrows(InvalidPairException.class, () ->
-                BusinessRuleValidator.validateResolvedPairs("BTC", request, pairs));
+        assertThrows(InvalidPairException.class, () -> BusinessRuleValidator.validateResolvedPairs(request, pairs));
     }
 }

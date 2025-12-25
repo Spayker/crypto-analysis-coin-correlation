@@ -18,7 +18,7 @@ Typical request:
 More information about the API can be found in Medium.
 
 ## Architecture
-![alt text](resources/jpg/Price_Correlation.jpg)
+![alt text](resources/png/Price_Correlation.png)
 
 ## Technical Stack
 1) Java 21

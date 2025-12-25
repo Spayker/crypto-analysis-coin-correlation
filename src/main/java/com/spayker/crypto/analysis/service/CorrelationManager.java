@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static com.spayker.crypto.analysis.service.validator.BusinessRuleValidator.validateRequest;
 import static com.spayker.crypto.analysis.service.validator.BusinessRuleValidator.validateResolvedPairs;
@@ -32,7 +33,7 @@ public class CorrelationManager {
     public CorrelationResponse getCorrelation(String targetCoin, CorrelationRequest correlationRequestDto) {
         validateRequest(targetCoin, correlationRequestDto);
         List<String> pairNames = resolvePairs(correlationRequestDto);
-        validateResolvedPairs(targetCoin, correlationRequestDto, pairNames);
+        validateResolvedPairs(correlationRequestDto, pairNames);
         candleHistoryManager.initCandleStickHistoryByPairName(
                 targetCoin,
                 pairNames,
@@ -68,9 +69,12 @@ public class CorrelationManager {
     }
 
     private void addPercentageItem(String pairName, String stableCoin, List<CorrelationPair> percentageList) {
-        double pricePercentage = getPricePercentage(tradeDataHistoryStorage.getCandleStickHistory().get(pairName).getKlines());
-        if (pricePercentage != 0) {
-            percentageList.add(new CorrelationPair(pairName.replace(stableCoin, ""), String.valueOf(pricePercentage)));
+        Map<String, TradeHistory> candleStickHistory = tradeDataHistoryStorage.getCandleStickHistory();
+        if (candleStickHistory.containsKey(pairName)) {
+            double pricePercentage = getPricePercentage(candleStickHistory.get(pairName).getKlines());
+            if (pricePercentage != 0) {
+                percentageList.add(new CorrelationPair(pairName.replace(stableCoin, ""), String.valueOf(pricePercentage)));
+            }
         }
     }
 
