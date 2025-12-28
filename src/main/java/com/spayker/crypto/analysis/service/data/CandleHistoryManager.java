@@ -6,6 +6,7 @@ import com.spayker.crypto.analysis.service.dto.correlation.CorrelationRequest;
 import com.spayker.crypto.analysis.service.dto.TradeHistory;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.github.resilience4j.ratelimiter.RateLimiterRegistry;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,21 +38,27 @@ public class CandleHistoryManager {
         this.byBitExchangeAdapter = byBitExchangeAdapter;
         this.candleGrabberConfig = candleGrabberConfig;
         this.tradeDataHistoryStorage = tradeDataHistoryStorage;
-        this.rateLimiter = registry.rateLimiter("bybit");
+        this.rateLimiter = registry.rateLimiter("bybitLimiter");
     }
 
     public void initCandleStickHistoryByPairName(String targetCoin, List<String> pairNames, CorrelationRequest correlationRequestDto) {
         List<String> allSymbols = new ArrayList<>(pairNames);
         allSymbols.add(targetCoin + correlationRequestDto.getStableCoin());
-        allSymbols.stream()
-                .map(pair -> CompletableFuture.runAsync(
-                        () -> initCandleStickHistoryRateLimited(pair, correlationRequestDto), pool))
-                .forEach(CompletableFuture::join);
-    }
-
-    private void initCandleStickHistoryRateLimited(String pairName, CorrelationRequest correlationRequestDto) {
-        RateLimiter.waitForPermission(rateLimiter);
-        initTradeHistory(pairName, correlationRequestDto);
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        for (String pair : allSymbols) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    Runnable decoratedRunnable = RateLimiter.decorateRunnable(rateLimiter, () -> initTradeHistory(pair, correlationRequestDto));
+                    decoratedRunnable.run();
+                } catch (RequestNotPermitted ex) {
+                    log.warn("Rate limit exceeded for pair: {}", pair);
+                } catch (Exception ex) {
+                    log.error("Error fetching candle history for pair: {}", pair, ex);
+                }
+            }, pool);
+            futures.add(future);
+        }
+        futures.forEach(CompletableFuture::join);
     }
 
     void initTradeHistory(String pairName, CorrelationRequest correlationRequestDto) {
@@ -61,8 +68,8 @@ public class CandleHistoryManager {
                 candleGrabberConfig.getHourIntervalType(), correlationRequestDto);
         if (isTradeHistoryValid(correlationRequestDto, kLines)) {
             candleStickHistory.put(pairName, TradeHistory.builder()
-                            .klines(kLines)
-                            .build()
+                    .klines(kLines)
+                    .build()
             );
         }
     }
