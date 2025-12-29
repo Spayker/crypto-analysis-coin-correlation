@@ -34,7 +34,7 @@ public class CorrelationManager {
         validateRequest(targetCoin, correlationRequestDto);
         List<String> pairNames = resolvePairs(correlationRequestDto);
         validateResolvedPairs(correlationRequestDto, pairNames);
-        candleHistoryManager.initCandleStickHistoryByPairName(
+        candleHistoryManager.initKLineHistoryByPairName(
                 targetCoin,
                 pairNames,
                 correlationRequestDto

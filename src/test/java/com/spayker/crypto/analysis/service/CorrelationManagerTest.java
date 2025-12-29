@@ -80,7 +80,7 @@ class CorrelationManagerTest {
         CorrelationResponse response = correlationManager.getCorrelation("BTC", request);
 
         // then
-        verify(candleHistoryManager, times(1)).initCandleStickHistoryByPairName("BTC", symbols, request);
+        verify(candleHistoryManager, times(1)).initKLineHistoryByPairName("BTC", symbols, request);
         assertNotNull(response);
         assertEquals("66.66666666666666", response.getTargetCoinPercentChange());
         assertEquals(2, response.getCorrelationPairs().size());
@@ -118,7 +118,7 @@ class CorrelationManagerTest {
 
         // then
         List<String> expectedPairs = Stream.of("BTCUSDT", "ETHUSDT", "ALGOUSDT", "DOGEUSDT").filter(p -> p.endsWith("USDT")).toList();
-        verify(candleHistoryManager, times(1)).initCandleStickHistoryByPairName("BTC", expectedPairs, request);
+        verify(candleHistoryManager, times(1)).initKLineHistoryByPairName("BTC", expectedPairs, request);
         assertNotNull(response);
         assertEquals("66.66666666666666", response.getTargetCoinPercentChange());
         assertEquals(4, response.getCorrelationPairs().size());

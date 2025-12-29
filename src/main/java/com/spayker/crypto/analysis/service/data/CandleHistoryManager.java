@@ -31,6 +31,9 @@ public class CandleHistoryManager {
 
     private final ExecutorService pool = Executors.newFixedThreadPool(40);
 
+    private static final long INITIAL_BACKOFF_MILLIS = 500;
+    private static final long MAX_BACKOFF_MILLIS = 10000;
+
     public CandleHistoryManager(@Autowired ByBitExchangeAdapter byBitExchangeAdapter,
                                 @Autowired CandleGrabberConfig candleGrabberConfig,
                                 @Autowired TradeDataHistoryStorage tradeDataHistoryStorage,
@@ -41,24 +44,57 @@ public class CandleHistoryManager {
         this.rateLimiter = registry.rateLimiter("bybitLimiter");
     }
 
-    public void initCandleStickHistoryByPairName(String targetCoin, List<String> pairNames, CorrelationRequest correlationRequestDto) {
-        List<String> allSymbols = new ArrayList<>(pairNames);
-        allSymbols.add(targetCoin + correlationRequestDto.getStableCoin());
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
-        for (String pair : allSymbols) {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                try {
-                    Runnable decoratedRunnable = RateLimiter.decorateRunnable(rateLimiter, () -> initTradeHistory(pair, correlationRequestDto));
-                    decoratedRunnable.run();
-                } catch (RequestNotPermitted ex) {
-                    log.warn("Rate limit exceeded for pair: {}", pair);
-                } catch (Exception ex) {
-                    log.error("Error fetching candle history for pair: {}", pair, ex);
-                }
-            }, pool);
-            futures.add(future);
-        }
+    public void initKLineHistoryByPairName(String targetCoin, List<String> pairNames, CorrelationRequest correlationRequestDto) {
+        List<String> symbols = new ArrayList<>(pairNames);
+        symbols.add(targetCoin + correlationRequestDto.getStableCoin());
+
+        List<CompletableFuture<Void>> futures = symbols.stream()
+                .map(symbol -> CompletableFuture.runAsync(() -> fetchHistoryWithRetry(symbol, correlationRequestDto), pool))
+                .toList();
+
         futures.forEach(CompletableFuture::join);
+    }
+
+    private void fetchHistoryWithRetry(String symbol, CorrelationRequest correlationRequestDto) {
+        int attempt = 1;
+        while (true) {
+            try {
+                executeWithRateLimiter(symbol, correlationRequestDto);
+                log.info("Successfully fetched history for symbol: {} after {} attempts", symbol, attempt);
+                break;
+            } catch (RequestNotPermitted ex) {
+                handleRateLimitBackoff(symbol, attempt);
+                attempt++;
+            } catch (Exception ex) {
+                handleGenericRetry(symbol, ex);
+                attempt++;
+            }
+        }
+    }
+
+    private void executeWithRateLimiter(String symbol, CorrelationRequest correlationRequestDto) {
+        Runnable decoratedRunnable = RateLimiter.decorateRunnable(rateLimiter, () -> initTradeHistory(symbol, correlationRequestDto));
+        decoratedRunnable.run();
+    }
+
+    private void handleRateLimitBackoff(String symbol, int attempt) {
+        long backoffMillis = Math.min(INITIAL_BACKOFF_MILLIS * (long) Math.pow(2, attempt - 1), MAX_BACKOFF_MILLIS);
+        log.warn("Rate limit exceeded for symbol: {}. Attempt {}. Backing off {} ms.", symbol, attempt, backoffMillis);
+        sleep(backoffMillis);
+    }
+
+    private void handleGenericRetry(String symbol, Exception ex) {
+        log.error("Error fetching candle history for symbol: {}. Retrying...", symbol, ex);
+        sleep(INITIAL_BACKOFF_MILLIS);
+    }
+
+    private void sleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            log.error("Sleep interrupted", ie);
+        }
     }
 
     void initTradeHistory(String pairName, CorrelationRequest correlationRequestDto) {
@@ -74,12 +110,13 @@ public class CandleHistoryManager {
         }
     }
 
-    private boolean isTradeHistoryValid(CorrelationRequest correlationRequestDto, List<Kline> kLines) {
+    boolean isTradeHistoryValid(CorrelationRequest correlationRequestDto, List<Kline> kLines) {
         if (kLines.isEmpty()) {
             return false;
         }
         Instant requestedStartDateTime = correlationRequestDto.getStartDateTime();
         Instant firstKlineStartTime = Instant.ofEpochMilli(kLines.getFirst().getStartTime());
-        return Duration.between(requestedStartDateTime, firstKlineStartTime).toSeconds() == 3600;
+        long timeDifference = Duration.between(requestedStartDateTime, firstKlineStartTime).toSeconds();
+        return timeDifference >= 0 && timeDifference <= 3600;
     }
 }
