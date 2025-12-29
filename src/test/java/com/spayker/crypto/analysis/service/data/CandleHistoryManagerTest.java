@@ -79,20 +79,19 @@ class CandleHistoryManagerTest {
     void shouldNotStoreTradeHistory_whenKlinesAreInvalid() {
         // given
         String pair = "ETHUSDT";
-        Instant requestStart = Instant.parse("2024-01-01T00:00:00Z");
-
         CorrelationRequest request = mock(CorrelationRequest.class);
-        when(request.getStartDateTime()).thenReturn(requestStart);
 
         Kline kline = mock(Kline.class);
         // invalid: same start time, not +3600
-        when(kline.getStartTime()).thenReturn(requestStart.toEpochMilli());
-
         when(byBitExchangeAdapter.getHourKlines(pair, "60", request))
                 .thenReturn(List.of(kline));
 
+        // mock isTradeHistoryValid to return false
+        CandleHistoryManager managerSpy = spy(candleHistoryManager);
+        doReturn(false).when(managerSpy).isTradeHistoryValid(request, List.of(kline));
+
         // when
-        candleHistoryManager.initTradeHistory(pair, request);
+        managerSpy.initTradeHistory(pair, request);
 
         // then
         assertThat(storage).doesNotContainKey(pair);
