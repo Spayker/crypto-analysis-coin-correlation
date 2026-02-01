@@ -13,6 +13,6 @@ ENV JAVA_OPTS="\
  -XX:MaxMetaspaceSize=100m \
  -XX:MaxDirectMemorySize=100m"
 
-EXPOSE 8080
+EXPOSE 8085
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
