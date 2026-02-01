@@ -1,6 +1,7 @@
 # crypto-analysis-coin-correlation
 
-[![Build Status](https://github.com/Spayker/crypto-analysis-coin-correlation/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Spayker/crypto-analysis-coin-correlation/actions/workflows/ci.yml) &nbsp;
+[![Build Status](https://github.com/Spayker/crypto-analysis-coin-correlation/actions/workflows/ci-cd.yml/badge.svg?branch=main)](https://github.com/Spayker/crypto-analysis-coin-correlation/actions/workflows/ci-cd.yml)
+![Codecov](https://img.shields.io/codecov/c/github/Spayker/crypto-analysis-coin-correlation)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Spayker/crypto-analysis-coin-correlation/blob/main/LICENSE)
 
 
