@@ -23,11 +23,15 @@ jobs:
       - name: Run tests with coverage
         run: mvn test
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           files: target/site/jacoco/jacoco.xml
           fail_ci_if_error: true
-          dry-run: true
+          commit: false
+          tag: false
+          flags: unittests
+        env:
+          CODECOV_TOKEN: ""
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
